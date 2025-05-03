@@ -1,4 +1,5 @@
 import ollama
+import requests
 
 response = ollama.chat(
     model='qwen3',
@@ -27,3 +28,4 @@ response = ollama.chat(
 )
 
 print(response['message']['tool_calls'])
+print(response)
