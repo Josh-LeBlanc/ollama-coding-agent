@@ -4,23 +4,23 @@ import requests
 response = ollama.chat(
     model='qwen3',
     messages=[{'role': 'user', 'content':
-        'What is the weather in Toronto?'}],
+        'what is in the file main.py?'}],
 
 		# provide a weather checking tool to the model
     tools=[{
       'type': 'function',
       'function': {
-        'name': 'get_current_weather',
-        'description': 'Get the current weather for a city',
+        'name': 'read_file',
+        'description': "Read the contents of a given relative file path. Use this when you want to see what's inside a file. Do not use this with directory names.",
         'parameters': {
           'type': 'object',
           'properties': {
-            'city': {
+            'path': {
               'type': 'string',
-              'description': 'The name of the city',
+              'description': 'relative path to the file to be read',
             },
           },
-          'required': ['city'],
+          'required': ['path'],
         },
       },
     },
@@ -28,4 +28,5 @@ response = ollama.chat(
 )
 
 print(response['message']['tool_calls'])
+print("hello")
 print(response)
