@@ -1,6 +1,13 @@
 import ollama
 import requests
 
+def read_file(path):
+    content = ""
+    with open(path, "r") as file:
+        content = file.read()
+
+    return content
+
 response = ollama.chat(
     model='qwen3',
     messages=[{'role': 'user', 'content':
@@ -28,5 +35,8 @@ response = ollama.chat(
 )
 
 print(response['message']['tool_calls'])
-print("hello")
-print(response)
+print("\n\nresponse:")
+print(response['message'])
+print("\n\ntool call result:")
+for tool_call in response['message']['tool_calls']:
+    print(globals()[tool_call.function.name](**tool_call.function.arguments))
