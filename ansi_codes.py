@@ -1,3 +1,4 @@
 ANSI_BLUE = "\u001b[94m"
 ANSI_END = "\u001b[0m"
 ANSI_ORANGE = "\u001b[93m"
+ANSI_GREEN = "\u001b[92m"
