@@ -66,6 +66,51 @@ list_files_definition = {
 list_files_tool = Tool(list_files_definition['function']['name'], list_files, list_files_definition)
 tool_list.append(list_files_tool)
 
+# edit files tool definition
+def edit_file(path, old_str="", new_str=""):
+    if not os.path.isfile(path):
+        with open(path, "w") as file:
+            file.write(new_str)
+    else:
+        with open(path, 'r') as file:
+            file_contents = file.read()
+        with open(path, 'w') as file:
+            file.write(file_contents.replace(old_str, new_str))
+
+    return "Used the edit file command to edit this file: " + path + " and write this contents: " + new_str
+
+edit_file_definition = {
+        'type': 'function',
+        'function': {
+            'name': 'edit_file',
+            'description': """Make edits to a text file.
+
+Replaces 'old_str' with 'new_str' in the given file. 'old_str' and 'new_str' MUST be different from each other.
+
+If the file specified with path doesn't exist, it will be created.""",
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'path': {
+                        'type': 'string',
+                        'description': 'The path to the file',
+                        },
+                    'old_str': {
+                        'type': 'string',
+                        'description': 'Text to search for - must match exactly and must only have one match exactly.',
+                        },
+                    'new_str': {
+                        'type': 'string',
+                        'description': 'Text to replace old_str with:',
+                        },
+                    },
+                'required': ['path', 'old_str', 'new_str']
+                },
+            },
+        }
+edit_file_tool = Tool(edit_file_definition['function']['name'], edit_file, edit_file_definition)
+tool_list.append(edit_file_tool)
+
 # other tool definitions
 
 tools = {}
