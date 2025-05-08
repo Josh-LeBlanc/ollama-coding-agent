@@ -5,6 +5,7 @@ from tools import *
 class Agent:
     model = "qwen3"
     tools = []
+    conversation = []
 
     def __init__(self, client: ollama.Client, get_user_message):
         self.client = client
@@ -13,54 +14,63 @@ class Agent:
             self.tools.append(tool.definition)
 
     def run(self):
-        conversation = []
         # system prompt
-        conversation.append({
+        self.conversation.append({
             "role": "system",
             "content": "respond succinctly"
             })
 
         print("Chat with " + self.model + " (use ctrl-c to quit)")
 
+        read_user_input = True
+
         while True:
-            print(ANSI_BLUE + "You" + ANSI_END + ": ", end="")
-            user_input = self.get_user_message()
+            if read_user_input:
+                print(ANSI_BLUE + "You" + ANSI_END + ": ", end="")
+                user_input = self.get_user_message()
 
-            conversation.append({
-                "role": "user",
-                "content": user_input
-                })
+                self.conversation.append({
+                    "role": "user",
+                    "content": user_input
+                    })
 
-            message = self.run_inference(conversation)
-            conversation.append({
-                "role": "assistant",
-                "content": message
-                })
+            message: ollama.Message = self.run_inference()
+            if message.content:
+                self.conversation.append({
+                    "role": "assistant",
+                    "content": message.content
+                    })
+            
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    self.execute_tool(tool_call)
+                    read_user_input = False
+            else:
+                read_user_input = True
 
-            print(ANSI_ORANGE + "Model" + ANSI_END + ": ", end="")
-            print(message)
+            if read_user_input:
+                print(ANSI_ORANGE + "Model" + ANSI_END + ": ", end="")
+                print(message.content)
 
-    def run_inference(self, conversation):
+    def run_inference(self):
         response =  self.client.chat(
                 model=self.model,
-                messages=conversation,
+                messages=self.conversation,
                 tools=self.tools
                 )
         if not response:
-            return "Error getting response."
-        if response.message.tool_calls:
-            for tool_call in response.message.tool_calls:
-                self.execute_tool(tool_call)
+            message = ollama.Message(role='assistant')
+            message.content = "Error getting response"
+            return message
         content = response.message.content
         if not content:
-            return "Error getting content."
+            return response.message
         if "<think>" in content:
-            if not content:
-                return "Error getting response."
             parts = content.split("</think>\n\n")
             think = parts[0][8:-1]
             content = parts[1]
-        return content
+        response.message.content = content
+        return response.message
 
     def execute_tool(self, tool_call):
         if tool_call.function.name not in tools.keys():
@@ -68,5 +78,9 @@ class Agent:
             return
         tool_response = globals()[tool_call.function.name](**tool_call.function.arguments)
         print(ANSI_GREEN + "Tool: " + ANSI_END + str(tool_call.function.name) + str(tool_call.function.arguments))
-        print(ANSI_GREEN + "Tool Response: " + ANSI_END + tool_response)
+        self.conversation.append({
+            'role': 'tool',
+            'content': tool_response,
+            'name': tool_call.function.name
+            })
 
