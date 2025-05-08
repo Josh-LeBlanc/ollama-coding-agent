@@ -1,3 +1,5 @@
+import os
+
 class Tool:
     def __init__(self, name, function, definition):
         self.name = name
@@ -34,6 +36,35 @@ read_file_definition = {
 
 read_file_tool = Tool(read_file_definition['function']['name'], read_file, read_file_definition)
 tool_list.append(read_file_tool)
+
+# list files tool definition
+def list_files(path="."):
+    files = os.listdir(path)
+    for file in files:
+        if os.path.isdir(file):
+            files.remove(file)
+            file += "/"
+            files.insert(0, file)
+    return ", ".join(files)
+
+list_files_definition = {
+        'type': 'function',
+        'function': {
+            'name': 'list_files',
+            'description': "List files and directories at a given path. If no path is provided, lists files in the current directory.",
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'path': {
+                        'type': 'string',
+                        'description': 'Optional relative path to list files from. Defaults to current directory if not provided.',
+                        },
+                    },
+                },
+            },
+        }
+list_files_tool = Tool(list_files_definition['function']['name'], list_files, list_files_definition)
+tool_list.append(list_files_tool)
 
 # other tool definitions
 
